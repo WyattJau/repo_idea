@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lagou.dao.RoleMapper">
+
+    <!--
+        查询所有角色信息 public List<Role> findAllRole(Role role);
+    -->
+    <select id="findAllRole" parameterType="com.lagou.domain.Role" resultType="com.lagou.domain.Role">
+
+        select * from roles
+        <where>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+        </where>
+
+    </select>
+
+    <!--
+        根据角色Id查询关联的菜单信息Id     public List<Integer> findMenuByRoleId(Integer roleId);
+    -->
+    <select id="findMenuByRoleId" resultType="string" parameterType="int">
+        select m.id from roles r inner join role_menu_relation rm on r.id = rm.role_id
+                                    inner join menu m on m.id = rm.menu_id where r.id = #{id}
+    </select>
+
+    <!--
+        根据roleid删除在中间表与菜单的关联关系 public void deleteRoleContextMenu(Integer rid);
+    -->
+    <delete id="deleteRoleContextMenu" parameterType="int">
+        delete from role_menu_relation where role_id = #{rid}
+    </delete>
+    
+    <!--
+        为角色分配菜单 public void roleContextMenu(Role_menu_relation role_menu_relation);
+    -->
+    <insert id="roleContextMenu" parameterType="com.lagou.domain.Role_menu_relation">
+        insert into role_menu_relation values(null, #{menuId}, #{roleId}, #{createdTime}, #{updatedTime}, #{createdBy}, #{updatedby})
+    </insert>
+
+    <!--
+        删除角色 public void deleteRole(Integer roleid);
+    -->
+    <delete id="deleteRole" parameterType="int">
+        delete from roles where id = #{roleid}
+    </delete>
+
+    <!--
+        添加角色 public void saveRole(Role role)
+    -->
+    <insert id="saveRole" parameterType="com.lagou.domain.Role">
+        insert into roles(code, name, description, created_time, updated_time, created_by, updated_by) values(#{code},#{name},#{description},#{createdTime},#{updatedTime},#{createdBy},#{updatedBy})
+    </insert>
+
+    <!--
+        修改角色 public void updateRole(Role role)
+    -->
+    <update id="updateRole" parameterType="com.lagou.domain.Role">
+        update roles
+        <trim prefix="set" suffixOverrides=",">
+            <if test="code != null and code != ''">
+                code = #{code},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="description != null and description != ''">
+                description = #{description},
+            </if>
+            <if  test="updatedTime != null">
+                updated_time = #{updatedTime},
+            </if>
+            <if test="updatedBy != null and updatedBy != ''">
+                updated_by = #{updatedBy}
+            </if>
+        </trim>
+        <where>
+            <if test="id != null and id != ''">
+                id = #{id}
+            </if>
+        </where>
+    </update>
+
+</mapper>

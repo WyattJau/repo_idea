@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.lagou.dao.UserMapper">
+
+    <!--
+        用户分页&多条件组合查询 public List<User> findAllUserByPage(UserVO userVO);
+    -->
+    <select id="findAllUserByPage" parameterType="com.lagou.domain.User" resultType="com.lagou.domain.UserVO">
+        select * from user
+        <where>
+            <if test="true">
+                and is_del != 1
+            </if>
+            <if test="username != null and username != ''">
+                and name = #{username}
+            </if>
+            <if test="startCreateTime != null and endCreateTime != null">
+                and create_time between #{startCreateTime} and #{endCreateTime}
+            </if>
+        </where>
+    </select>
+
+    <!--
+        修改用户状态 public void updateUserStatus(User user);
+    -->
+    <update id="updateUserStatus" parameterType="com.lagou.domain.User">
+        update user set status = #{status}, update_time = #{update_time} where id = #{id}
+    </update>
+    
+    <!--
+        根据与用户名查询用户
+    -->
+    <select id="login" parameterType="com.lagou.domain.User" resultType="com.lagou.domain.User">
+        select * from user where phone = #{phone}
+    </select>
+
+    <!--
+        根据用户id查询关联的角色信息 public List<Role> findUserRelationRoleById(Integer id);
+    -->
+    <select id="findUserRelationRoleById" parameterType="int" resultType="com.lagou.domain.Role">
+        select * from roles r inner join user_role_relation ur on r.id = ur.role_id where ur.user_id = #{userid}
+    </select>
+
+    <!--
+        根据用户ID清空中间表关联关系 public void deleteUserContextRole(Integer userId);
+    -->
+    <delete id="deleteUserContextRole" parameterType="int">
+        delete from user_role_relation where user_id = #{userid}
+    </delete>
+
+    <!--
+        分配角色    public void userContextRole(User_Role_relation user_role_relation);
+    -->
+    <insert id="userContextRole" parameterType="com.lagou.domain.User_Role_relation">
+        insert into user_role_relation values(null,#{userId},#{roleId},#{createdTime},#{updatedTime},#{createdBy},#{updatedby})
+    </insert>
+
+    <!--
+        根据角色id查询所拥有的顶级菜单(parent_id = -1)    public List<Menu> findParentMenuByRoleId(List<Integer> ids);
+    -->
+    <select id="findParentMenuByRoleId" parameterType="java.util.List" resultType="com.lagou.domain.Menu">
+        select
+            DISTINCT m.*
+        from
+            roles r INNER JOIN role_menu_relation rm on r.id = rm.role_id
+                    INNER JOIN menu m on m.id = rm.menu_id
+        WHERE
+            m.parent_id = -1 AND r.id in
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+
+    </select>
+
+    <!--
+        根据pid查询子菜单信息    public List<Menu> findSubMenuByPid(Integer pid);
+    -->
+    <select id="findSubMenuByPid" parameterType="int" resultType="com.lagou.domain.Menu">
+        select * from menu where parent_id = #{pid}
+    </select>
+
+    <!--
+        获取用户所拥有的资源权限信息  public List<Resource> findResourceByRoleId(List<Integer> ids);
+    -->
+    <select id="findResourceByRoleId" parameterType="java.util.List" resultType="com.lagou.domain.Resource">
+        SELECT
+            DISTINCT r.*
+        from
+            resource r inner JOIN role_resource_relation rr on r.id = rr.resource_id
+                       INNER JOIN roles ro ON ro.id = rr.role_id
+        WHERE
+            ro.id in 
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--
+        注册用户 public void register(User user);
+            private Integer account_non_expired;
+    // 账号是否未过期
+    private Integer credentials_non_expired;
+    // 是否未锁定
+    private Integer account_non_locked;
+    // 用户状态
+    private String status;
+    // 是否删除
+    private Integer is_del;
+    // 创建时间
+    private Date create_time;
+    // 更新时间
+    private Date update_time;
+    -->
+    <insert id="register" parameterType="com.lagou.domain.User">
+        insert into user values(
+                                null,
+                                #{name}, #{portrait}, #{phone}, #{password}, #{reg_ip}, #{account_non_expired},
+                                #{credentials_non_expired}, #{account_non_locked}, #{status}, #{is_del}, #{create_time}, #{update_time}
+                               )
+    </insert>
+
+</mapper>
