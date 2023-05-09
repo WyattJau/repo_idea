@@ -59,6 +59,12 @@ public interface UserMapper {
     public void test41();
     public void test51();
 
+    public void test1();
+    public void test2();
+    public void test3();
+    public void test4();
+    public void test5();
+
     /*
     *   注册用户
     * */
